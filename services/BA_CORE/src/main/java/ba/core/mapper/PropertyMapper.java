@@ -1,6 +1,7 @@
 package ba.core.mapper;
 
 import ba.core.dto.CreatePropertyDTO;
+import ba.core.dto.PropertyDTO;
 import ba.core.models.PropertyEntity;
 
 import java.time.LocalDateTime;
@@ -23,5 +24,14 @@ public class PropertyMapper {
         propertyEntity.setUpdatedAt(now);
 
         return propertyEntity;
+    }
+
+    public static PropertyDTO convertToDTO(PropertyEntity propertyEntity){
+        PropertyDTO propertyDTO = new PropertyDTO();
+        propertyDTO.setId(propertyEntity.getId());
+        propertyDTO.setAddress(propertyEntity.getAddress());
+        propertyDTO.setTitle(propertyEntity.getTitle());
+        propertyDTO.setMonthlyRent(propertyEntity.getMonthlyRent());
+        return propertyDTO;
     }
 }

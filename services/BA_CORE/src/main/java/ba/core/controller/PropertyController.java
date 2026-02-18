@@ -3,6 +3,7 @@ package ba.core.controller;
 import java.util.List;
 
 import ba.core.dto.CreatePropertyDTO;
+import ba.core.dto.PropertyDTO;
 import ba.core.exception.PropertyException;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -12,12 +13,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ba.core.models.PropertyEntity;
 import ba.core.service.PropertyService;
 
 @RestController
@@ -31,13 +32,21 @@ public class PropertyController {
     public PropertyController(PropertyService propertyService){ this.propertyService = propertyService; }
 
     @GetMapping("/getAllOwnerProperties")
-    public ResponseEntity<List<PropertyEntity>> getUserProperties(
+    public ResponseEntity<List<PropertyDTO>> getUserProperties(
             @AuthenticationPrincipal Jwt jwt
     )
     {
         String ownerId = jwt.getSubject();
-        List<PropertyEntity> properties = propertyService.getAllOwnerProperties(ownerId);
+        List<PropertyDTO> properties = propertyService.getAllOwnerProperties(ownerId);
         return ResponseEntity.ok(properties);
+    }
+
+    @GetMapping("getProperty/{propertyId}")
+    public ResponseEntity<PropertyDTO> getProperty(
+            @PathVariable String propertyId
+    ){
+        PropertyDTO propertyEntity = propertyService.getProperty(propertyId);
+        return ResponseEntity.ok().body(propertyEntity);
     }
 
     @PostMapping("/createProperty")

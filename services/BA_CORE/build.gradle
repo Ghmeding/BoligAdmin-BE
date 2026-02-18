@@ -43,3 +43,8 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+tasks.named("bootBuildImage") {
+	// Force the image to be built for Intel/AMD processors
+	imagePlatform = "linux/amd64"
+}

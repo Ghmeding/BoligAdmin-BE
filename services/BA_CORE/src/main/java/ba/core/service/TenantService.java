@@ -21,9 +21,9 @@ public class TenantService {
 
     @Transactional
     public String createTenant(CreateTenantDTO createTenantDTO) {
-        PropertyEntity propertyProxy = propertyRepository.getReferenceById(createTenantDTO.getPropertyId());
+        PropertyEntity propertyEntity = propertyRepository.getReferenceById(createTenantDTO.getPropertyId());
 
-        TenantEntity tenantEntity = TenantMapper.convertToEntity(createTenantDTO, propertyProxy);
+        TenantEntity tenantEntity = TenantMapper.convertToEntity(createTenantDTO, propertyEntity);
 
         return tenantRepository.save(tenantEntity).getId();
     }
