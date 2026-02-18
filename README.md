@@ -10,6 +10,10 @@ BoligAdmin is part of a larger property management system designed to help prope
 
 2. **ba_worker (Go)** - Worker service that consumes tasks from RabbitMQ and processes them asynchronously. Handles background jobs such as notifications and external integrations.
 
+## Related Repositories
+
+- **Infrastructure**: For the infrastructure setup (AWS), see [BoligAdmin-INFRA](https://github.com/Ghmeding/BoligAdmin-INFRA)
+
 ## Architecture
 
 ```
