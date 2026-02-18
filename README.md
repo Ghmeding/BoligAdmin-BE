@@ -123,56 +123,6 @@ The system uses RabbitMQ for asynchronous task processing between the Spring Boo
 2. For async tasks, **ba_core** publishes messages to RabbitMQ queues
 3. **ba_worker** consumes messages and processes them in the background
 
-### Queue Configuration
-
-| Queue Name | Purpose | Consumer |
-|------------|---------|----------|
-| `tasks.property` | Property-related background tasks | ba_worker |
-| `tasks.notification` | Email/push notification tasks | ba_worker |
-| `tasks.sync` | Data synchronization tasks | ba_worker |
-
-### Message Format
-```json
-{
-  "taskId": "uuid",
-  "taskType": "PROPERTY_SYNC",
-  "payload": {
-    "propertyId": "uuid",
-    "action": "UPDATE"
-  },
-  "createdAt": "2026-02-18T10:00:00Z",
-  "retryCount": 0
-}
-```
-
-## ba_worker (Go Service)
-
-The Go worker service handles asynchronous task processing.
-
-### Features
-- Concurrent message processing with configurable worker pool
-- Automatic retry with exponential backoff
-- Dead letter queue for failed messages
-- Graceful shutdown handling
-- Health check endpoint
-
-### Task Handlers
-- **PropertyHandler**: Handles property-related background tasks
-- **NotificationHandler**: Processes email and push notifications
-
-### Running ba_worker
-
-```bash
-cd services/ba_worker
-go build -o worker ./cmd/worker
-./worker
-```
-
-Or with Docker:
-```bash
-docker build -t ba_worker .
-docker run --env-file .env ba_worker
-```
 
 ## Security
 
@@ -226,18 +176,6 @@ SPRING_RABBITMQ_USERNAME=guest
 SPRING_RABBITMQ_PASSWORD=guest
 ```
 
-#### ba_worker (Go)
-```bash
-# RabbitMQ
-RABBITMQ_URL=amqp://guest:guest@localhost:5672/
-RABBITMQ_PREFETCH_COUNT=10
-
-# Worker Configuration
-WORKER_POOL_SIZE=5
-WORKER_RETRY_MAX=3
-WORKER_RETRY_DELAY=5s
-```
-
 ### Application Properties
 - **Server Port**: `8080` (default)
 - **Database Dialect**: PostgreSQL
@@ -248,9 +186,7 @@ WORKER_RETRY_DELAY=5s
 
 ### Prerequisites
 - Java 21+
-- Go 1.21+
 - PostgreSQL database
-- RabbitMQ server
 - Gradle (or use ./gradlew)
 
 ### Quick Start with Docker Compose
@@ -275,23 +211,12 @@ cd services/ba_core
 ```
 The API will start on `http://localhost:8080`
 
-#### 3. Build and Run ba_worker
-```bash
-cd services/ba_worker
-go mod download
-go run ./cmd/worker
-```
 
 ### Test
 ```bash
 # Test ba_core
 cd services/ba_core
 ./gradlew test
-
-# Test ba_worker
-cd services/ba_worker
-go test ./...
-```
 
 ## Dependencies
 
@@ -305,13 +230,6 @@ Key Spring Boot starters:
 - `jjwt-api`, `jjwt-impl`, `jjwt-jackson` - JWT token handling
 - `postgresql` - PostgreSQL database driver
 - `lombok` - Code generation for getters/setters/constructors
-
-### ba_worker (Go)
-Key Go dependencies:
-- `github.com/rabbitmq/amqp091-go` - RabbitMQ client
-- `github.com/spf13/viper` - Configuration management
-- `github.com/rs/zerolog` - Structured logging
-- `github.com/google/uuid` - UUID generation
 
 ## Development Notes
 
