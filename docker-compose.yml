@@ -1,0 +1,14 @@
+services:
+  ba-rabbitmq:
+      image: rabbitmq:3.10-management
+      container_name: ba-rabbitmq
+      ports:
+        - "5672:5672"
+        - "15672:15672"
+      volumes:
+        - ./services/ba_rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      healthcheck:
+        test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
