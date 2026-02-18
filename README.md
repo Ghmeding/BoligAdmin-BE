@@ -8,11 +8,18 @@ BoligAdmin is part of a larger property management system designed to help prope
 
 1. **ba_core (Spring Boot)** - REST API service handling property administration and tenant management with JWT-based security. Publishes tasks to RabbitMQ for async processing.
 
-2. **ba_worker (Go)** - Worker service that consumes tasks from RabbitMQ and processes them asynchronously. Handles background jobs such as notifications and external integrations.
+2. **ba_worker (Go)** IN PROGRESS - Worker service that consumes tasks from RabbitMQ and processes them asynchronously. Handles background jobs such as notifications and external integrations.
 
 ## Related Repositories
 
 - **Infrastructure**: For the infrastructure setup (AWS), see [BoligAdmin-INFRA](https://github.com/Ghmeding/BoligAdmin-INFRA)
+
+## Acknowledgments
+
+The following books helped shape and design this project:
+
+- [*Cloud Native Spring in Action*](https://www.oreilly.com/library/view/cloud-native-spring/9781617298424/) by Thomas Vitale
+- [*Concurrency in Go*](https://www.oreilly.com/library/view/concurrency-in-go/9781491941294/) by Katherine Cox-Buday
 
 ## Architecture
 
@@ -45,8 +52,6 @@ BoligAdmin is part of a larger property management system designed to help prope
 
 ### ba_worker (Go Service)
 - **Language**: Go 1.21+
-- **Message Queue**: RabbitMQ (amqp091-go)
-- **Configuration**: Environment variables / Viper
 
 ## Project Structure
 
@@ -83,25 +88,6 @@ services/
 │           ├── PropertyService.java           # Property business logic
 │           └── TenantService.java             # Tenant business logic
 │
-├── ba_worker/                             # Go Worker Service
-│   ├── cmd/
-│   │   └── worker/
-│   │       └── main.go                    # Application entry point
-│   ├── internal/
-│   │   ├── config/
-│   │   │   └── config.go                  # Configuration management
-│   │   ├── consumer/
-│   │   │   └── consumer.go                # RabbitMQ message consumer
-│   │   ├── handlers/
-│   │   │   ├── property_handler.go        # Property task handlers
-│   │   │   └── notification_handler.go    # Notification task handlers
-│   │   └── models/
-│   │       └── task.go                    # Task message models
-│   ├── go.mod                             # Go module definition
-│   ├── go.sum                             # Dependency checksums
-│   └── Dockerfile                         # Container build file
-│
-└── docker-compose.yml                     # Local development setup
 ```
 
 ## Key Features
