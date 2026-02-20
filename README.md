@@ -1,6 +1,6 @@
 # BoligAdmin Backend
 
-A multi-service backend system for managing residential properties and tenants. This system consists of a Spring Boot REST API for property administration and a Go-based worker service for asynchronous task processing via RabbitMQ.
+A microservice backend system for managing residential properties and tenants. This system consists of a Spring Boot REST API for property administration and a Go-based worker service for asynchronous task processing via RabbitMQ.
 
 ## Overview
 
@@ -22,6 +22,7 @@ The following books helped shape and design this project:
 - [*Concurrency in Go*](https://www.oreilly.com/library/view/concurrency-in-go/9781491941294/) by Katherine Cox-Buday
 
 ## Architecture
+The architectural flow follows an event-driven pattern.
 
 ```
 ┌─────────────────┐     ┌─────────────┐     ┌─────────────────┐
