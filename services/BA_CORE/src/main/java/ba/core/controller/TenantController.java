@@ -6,6 +6,7 @@ import ba.core.service.TenantService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +20,8 @@ public class TenantController {
 
     private final TenantService tenantService;
 
-    public TenantController(TenantService tenantService){ this.tenantService = tenantService; }
+    public TenantController(StreamBridge streamBridge, TenantService tenantService){
+        this.tenantService = tenantService; }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TenantController.class);
 

@@ -24,8 +24,13 @@ public class TenantService {
 
     @Transactional
     public String createTenant(CreateTenantDTO createTenantDTO) {
-        PropertyEntity propertyEntity = propertyRepository.getReferenceById(createTenantDTO.getPropertyId());
+        PropertyEntity propertyEntity = propertyRepository.findById(createTenantDTO.getPropertyId())
+            .orElseThrow(() -> new RuntimeException("Property Not Found"));
 
+        if(propertyEntity.getTenant() != null){
+            throw new IllegalStateException("This property already has an active tenant");
+        }
+        
         TenantEntity tenantEntity = TenantMapper.convertToEntity(createTenantDTO, propertyEntity);
         streamBridge.send("tenantCreatedProducer-out-0", createTenantDTO);
 
