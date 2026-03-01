@@ -1,5 +1,6 @@
 package ba.core.exception;
 
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -32,6 +33,13 @@ public class GlobalExceptionHandler {
         });
 
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<List<String>> handleIllegalStateException(IllegalStateException ex){
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(List.of(ex.getMessage()));
     }
 
 }

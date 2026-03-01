@@ -30,14 +30,8 @@ public class TenantController {
             @Valid @RequestBody CreateTenantDTO createTenantDTO
     ){
         String tenantId;
-        try {
-            tenantId = tenantService.createTenant(createTenantDTO);
-        } catch (TenantException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
-        } catch (Exception e){
-            LOGGER.error("Unexpected error", e);
-            return new ResponseEntity<>("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        tenantId = tenantService.createTenant(createTenantDTO);
+
         return ResponseEntity.ok().body(String.valueOf(tenantId));
     }
 }
