@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ba_worker/mailService"
 	"log"
 	"time"
 
@@ -14,22 +15,8 @@ func crashOnError(err error, msg string) {
 }
 
 func main() {
-	var rabbitMQConnection *amqp.Connection
-	var err error
-	//TODO: refactor retry block below
-	for i := 1; i <= 5; i++ {
-		log.Printf("Attempt %d...", i)
-		rabbitMQConnection, err = amqp.Dial("amqp://user:pass@localhost:5672/")
-
-		if err != nil {
-			if i == 5 {
-				crashOnError(err, "All 5 retries failed")
-			}
-			time.Sleep(2 * time.Second)
-			continue
-		}
-		break // Success!
-	}
+	rabbitMQConnection, err := connectToRabbitMQWithRetry("amqp://user:pass@localhost:5672/", 5)
+	crashOnError(err, "Failed to connect to RabbitMQ")
 
 	defer func(rabbitMQConnection *amqp.Connection) {
 		err := rabbitMQConnection.Close()
@@ -43,6 +30,7 @@ func main() {
 	ch, err := rabbitMQConnection.Channel()
 	crashOnError(err, "Failed to open consumer channel")
 
+	// create the queue
 	q, err := ch.QueueDeclare(
 		"ba-worker-queue",
 		true,
@@ -53,6 +41,7 @@ func main() {
 	)
 	crashOnError(err, "Failed to declare the queue")
 
+	// bind the queue to the exchange
 	err = ch.QueueBind(
 		q.Name,
 		"#", //routing key wildcard (accept everything from this exchange
@@ -80,6 +69,7 @@ func main() {
 	go func() {
 		for message := range msgs {
 			log.Printf("Received: %s", message.Body)
+			mailService.SendMail(string(message.Body))
 		}
 	}()
 
@@ -87,5 +77,24 @@ func main() {
 
 	//block main from shutting the app down
 	select {}
+}
 
+func connectToRabbitMQWithRetry(uri string, retries int) (*amqp.Connection, error) {
+	var conn *amqp.Connection
+	var err error
+
+	for i := 1; i <= retries; i++ {
+		log.Printf("Attempt %d...", i)
+		conn, err = amqp.Dial(uri)
+
+		if err == nil {
+			return conn, nil
+		}
+
+		log.Printf("Failed to connect: %v", err)
+		if i < 5 {
+			time.Sleep(2 * time.Second)
+		}
+	}
+	return nil, err
 }
