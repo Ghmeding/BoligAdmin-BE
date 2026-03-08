@@ -1,8 +1,11 @@
-package mailService
+package services
 
-import "net/smtp"
+import (
+	"log"
+	"net/smtp"
+)
 
-func SendMail(body string) {
+func SendMail(body string) error {
 	from := "meding97@gmail.com"
 	password := "vlna xgvy dvkl buma"
 
@@ -22,6 +25,9 @@ func SendMail(body string) {
 
 	err := smtp.SendMail(address, auth, from, to, msg)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	log.Printf("Mail sent successfully!")
+
+	return nil
 }
