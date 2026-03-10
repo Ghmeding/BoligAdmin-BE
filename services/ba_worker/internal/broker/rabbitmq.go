@@ -1,6 +1,7 @@
 package broker
 
 import (
+	"ba_worker/internal/config"
 	"ba_worker/internal/util"
 	"log"
 	"time"
@@ -14,8 +15,8 @@ type RabbitMQ struct {
 	Queue   amqp.Queue
 }
 
-func CreateRabbitMQConnection(uri string) (*RabbitMQ, error) {
-	rabbitMQConn, err := connectToRabbitMQWithRetry(uri, 5)
+func CreateRabbitMQConnection(cfg *config.Config) (*RabbitMQ, error) {
+	rabbitMQConn, err := connectToRabbitMQWithRetry(cfg.RabbitMQURL, 5)
 	util.CrashOnError(err, "Failed to establish connection to RabbitMQ")
 
 	rabbitMQChannel, err := rabbitMQConn.Channel()

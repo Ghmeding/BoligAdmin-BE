@@ -1,18 +1,19 @@
 package services
 
 import (
+	"ba_worker/internal/config"
 	"log"
 	"net/smtp"
 )
 
-func SendMail(body string) error {
-	from := "meding97@gmail.com"
-	password := "vlna xgvy dvkl buma"
+func SendMail(body string, cfg *config.Config) error {
+	from := cfg.SMTPUser
+	password := cfg.SMTPPass
 
-	toEmailAddress := "meding97@gmail.com"
+	toEmailAddress := cfg.SMTPUser
 	to := []string{toEmailAddress}
 
-	host := "smtp.gmail.com"
+	host := cfg.SMTPHost
 	port := "587"
 	address := host + ":" + port
 

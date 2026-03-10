@@ -2,6 +2,7 @@ package main
 
 import (
 	"ba_worker/internal/broker"
+	"ba_worker/internal/config"
 	"ba_worker/internal/util"
 	"ba_worker/internal/worker"
 	"log"
@@ -11,7 +12,10 @@ import (
 )
 
 func main() {
-	brokerConnection, err := broker.CreateRabbitMQConnection("amqp://user:pass@localhost:5672/")
+	// init config
+	cfg := config.New()
+
+	brokerConnection, err := broker.CreateRabbitMQConnection(cfg)
 
 	err = brokerConnection.Channel.Qos(10, 0, false)
 	util.CrashOnError(err, "Failed to connect to RabbitMQ")
@@ -42,7 +46,7 @@ func main() {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			worker.ProcessMessages(msgs, i)
+			worker.ProcessMessages(msgs, i, cfg)
 		}()
 	}
 
