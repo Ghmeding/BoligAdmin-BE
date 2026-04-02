@@ -21,6 +21,9 @@ public class TenantEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Column(nullable = false)
+    private String ownerId;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "property_id", referencedColumnName = "id", nullable = false)
     private PropertyEntity property;

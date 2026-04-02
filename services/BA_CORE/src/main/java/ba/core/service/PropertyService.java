@@ -74,7 +74,14 @@ public class PropertyService {
         }
     }
 
-    public void setPropertyMonthlyRent(PropertyEntity property, Float monthlyRent){
-
+    @Transactional
+    public void deleteProperty(String propertyId){
+        try {
+            PropertyEntity propertyEntity = new PropertyEntity();
+            propertyEntity.setId(propertyId);
+            propertyRepository.delete(propertyEntity);
+        } catch (Exception e) {
+            throw new PropertyException(e.getMessage());
+        }
     }
 }

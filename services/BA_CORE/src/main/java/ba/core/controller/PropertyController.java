@@ -12,14 +12,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import ba.core.service.PropertyService;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import ba.core.service.PropertyService;
 
 @RestController
 @RequestMapping("/property")
@@ -31,19 +32,20 @@ public class PropertyController {
 
     public PropertyController(PropertyService propertyService){ this.propertyService = propertyService; }
 
+    @GetMapping("/getAllProperties")
+    public ResponseEntity<List<PropertyDTO>> getAllProperties(
+    ){
+        List<PropertyDTO> properties = propertyService.getAllProperties();
+        return ResponseEntity.ok(properties);
+    }
+
     @GetMapping("/getAllOwnerProperties")
     public ResponseEntity<List<PropertyDTO>> getUserProperties(
             @AuthenticationPrincipal Jwt jwt
     )
     {
-        String ownerId = jwt.getSubject();
+        String ownerId = jwt.getClaim("userId");
         List<PropertyDTO> properties = propertyService.getAllOwnerProperties(ownerId);
-        return ResponseEntity.ok(properties);
-    }
-
-    @GetMapping("/getAllProperties")
-    public ResponseEntity<List<PropertyDTO>> getAllProperties(){
-        List<PropertyDTO> properties = propertyService.getAllProperties();
         return ResponseEntity.ok(properties);
     }
 
@@ -57,12 +59,12 @@ public class PropertyController {
 
     @PostMapping("/createProperty")
     public ResponseEntity<?> createProperty(
-//            @AuthenticationPrincipal Jwt jwt,
-            @Valid @RequestBody CreatePropertyDTO createPropertyDto
+            @Valid @RequestBody CreatePropertyDTO createPropertyDto,
+            @AuthenticationPrincipal Jwt jwt
     ){
         String propertyId;
         try {
-            String ownerId = "test";
+            String ownerId = jwt.getClaim("userId");
             propertyId = propertyService.createProperty(createPropertyDto, ownerId);
         } catch (PropertyException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
@@ -70,6 +72,21 @@ public class PropertyController {
             LOGGER.error("Unexpected error", e);
             return new ResponseEntity<>("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return ResponseEntity.ok().body(String.valueOf(propertyId));
+        return ResponseEntity.ok().body(propertyId);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteProperty(
+            @RequestParam String propertyId
+    ) {
+        try {
+            propertyService.deleteProperty(propertyId);
+            return ResponseEntity.ok().build();
+        } catch (PropertyException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error", e);
+            return new ResponseEntity<>("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
