@@ -4,11 +4,13 @@ A microservice backend system for managing residential properties and tenants. T
 
 ## Overview
 
-BoligAdmin is part of a larger property management system designed to help property owners manage their real estate portfolio. The backend consists of two main services:
+BoligAdmin is part of a larger property management system designed to help property owners manage their real estate portfolio. The backend consists of three main services:
 
-1. **ba_core (Spring Boot)** - REST API service handling property administration and tenant management with JWT-based security. Publishes tasks to RabbitMQ for async processing.
+1. **ba_auth (Spring Boot)** - Authentication service handling user registration, login, email verification, and JWT token generation.
 
-2. **ba_worker (Go)** IN PROGRESS - Worker service that consumes tasks from RabbitMQ and processes them asynchronously. Handles background jobs such as notifications and external integrations.
+2. **ba_core (Spring Boot)** - REST API service handling property administration and tenant management with JWT-based security. Publishes tasks to RabbitMQ for async processing.
+
+3. **ba_worker (Go)** IN PROGRESS - Worker service that consumes tasks from RabbitMQ and processes them asynchronously. Handles background jobs such as notifications and external integrations.
 
 ## Related Repositories
 
@@ -25,11 +27,20 @@ The following books helped shape and design this project:
 The architectural flow follows an event-driven pattern.
 
 ```
+┌─────────────────┐
+│    ba_auth      │
+│  (Spring Boot)  │
+│  Auth Service   │
+└─────────────────┘
+        ▲
+        │
+        ▼
 ┌─────────────────┐     ┌─────────────┐     ┌─────────────────┐
-│   ba_core       │────▶│  RabbitMQ   │────▶│   ba_worker     │
+│   ba_core       │◀───▶│  RabbitMQ   │◀───▶│   ba_worker     │
 │  (Spring Boot)  │     │   Queue     │     │     (Go)        │
 │   REST API      │     └─────────────┘     │  Task Consumer  │
 └─────────────────┘                         └─────────────────┘
+        ▲
         │
         ▼
 ┌─────────────────┐
@@ -39,6 +50,17 @@ The architectural flow follows an event-driven pattern.
 ```
 
 ## Tech Stack
+
+### ba_auth (Spring Boot Service)
+- **Framework**: Spring Boot 3.4.4
+- **Language**: Java 21
+- **Database**: PostgreSQL
+- **Security**: Spring Security with JWT
+- **Build Tool**: Gradle
+- **ORM**: Spring Data JPA / Hibernate
+- **Authentication**: JWT (JJWT 0.11.5)
+- **Email**: Spring Mail (SMTP)
+- **Utilities**: Lombok
 
 ### ba_core (Spring Boot Service)
 - **Framework**: Spring Boot 3.5.7
@@ -58,6 +80,29 @@ The architectural flow follows an event-driven pattern.
 
 ```
 services/
+├── ba_auth/                               # Spring Boot Authentication Service
+│   └── src/main/java/jwt/auth/
+│       ├── App.java                       # Spring Boot application entry point
+│       ├── config/                        # Security and application configuration
+│       ├── controller/
+│       │   ├── AuthenticationController.java  # Auth endpoints (signup, login, verify)
+│       │   └── UserController.java            # User management endpoints
+│       ├── dto/
+│       │   ├── LoginUserDto.java              # DTO for login requests
+│       │   ├── RegisterUserDto.java           # DTO for user registration
+│       │   └── VerifyUserDto.java             # DTO for email verification
+│       ├── models/
+│       │   └── User.java                      # User entity
+│       ├── repository/
+│       │   └── UserRepository.java            # User data access
+│       ├── responses/
+│       │   └── LoginResponse.java             # Login response with JWT token
+│       └── service/
+│           ├── AuthenticationService.java    # Authentication business logic
+│           ├── EmailService.java             # Email sending service
+│           ├── JwtService.java               # JWT token generation/validation
+│           └── UserService.java              # User management service
+│
 ├── ba_core/                               # Spring Boot REST API
 │   └── src/main/java/ba/core/
 │       ├── App.java                       # Spring Boot application entry point
@@ -93,6 +138,13 @@ services/
 
 ## Key Features
 
+### Authentication (ba_auth)
+- **User Registration**: Create new user accounts with email verification
+- **Email Verification**: Verify user accounts via email verification codes
+- **User Login**: Authenticate users and issue JWT tokens
+- **Token Management**: Generate and validate JWT authentication tokens
+- **Resend Verification**: Resend verification codes to users
+
 ### Property Management
 - **Retrieve Owner Properties**: Fetch all properties owned by an authenticated user
 - Endpoint: `GET /property/getAllOwnerProperties`
@@ -108,6 +160,20 @@ services/
 - Endpoint: `GET /health` (via HealthController)
 
 ## API Endpoints
+
+### ba_auth (Port 8070)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|----------------|
+| POST | `/auth/signup` | Register a new user | No |
+| POST | `/auth/login` | Login and receive JWT token | No |
+| POST | `/auth/verify` | Verify user account with code | No |
+| POST | `/auth/resend` | Resend verification email | No |
+| GET | `/users/currentUser` | Get current authenticated user | Yes |
+| GET | `/users/` | Get all users | Yes |
+| POST | `/users/ping` | Health check ping | Yes |
+
+### ba_core (Port 8080)
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|----------------|
@@ -160,6 +226,21 @@ The application uses **Spring Security** with **JWT (JSON Web Tokens)** for auth
 
 ### Environment Variables
 
+#### ba_auth (Spring Boot)
+```properties
+# Database
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/boligadmin
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=your_password
+
+# Security
+JWT_SECRET_KEY=your_jwt_secret_key
+
+# Email (for verification)
+SUPPORT_EMAIL=your_support_email@gmail.com
+APP_PASSWORD=your_gmail_app_password
+```
+
 #### ba_core (Spring Boot)
 ```properties
 # Database
@@ -178,7 +259,8 @@ SPRING_RABBITMQ_PASSWORD=guest
 ```
 
 ### Application Properties
-- **Server Port**: `8080` (default)
+- **ba_auth Server Port**: `8070`
+- **ba_core Server Port**: `8080`
 - **Database Dialect**: PostgreSQL
 - **JPA DDL**: `update` (auto-update schema)
 - **Transaction Management**: Enabled
@@ -204,7 +286,15 @@ docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:management
 ```
 Management UI available at `http://localhost:15672` (guest/guest)
 
-#### 2. Build and Run ba_core
+#### 2. Build and Run ba_auth
+```bash
+cd services/ba_auth
+./gradlew build
+./gradlew bootRun
+```
+The Auth service will start on `http://localhost:8070`
+
+#### 3. Build and Run ba_core
 ```bash
 cd services/ba_core
 ./gradlew build
@@ -215,6 +305,10 @@ The API will start on `http://localhost:8080`
 
 ### Test
 ```bash
+# Test ba_auth
+cd services/ba_auth
+./gradlew test
+
 # Test ba_core
 cd services/ba_core
 ./gradlew test
